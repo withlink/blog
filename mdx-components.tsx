@@ -9,9 +9,44 @@ type ListItemProps = ComponentPropsWithoutRef<'li'>;
 type AnchorProps = ComponentPropsWithoutRef<'a'>;
 type BlockquoteProps = ComponentPropsWithoutRef<'blockquote'>;
 
+function PostMeta({
+  author,
+  date,
+  updated,
+}: {
+  author?: string;
+  date?: string;
+  updated?: string;
+}) {
+  const formatDate = (d: string) => {
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-zinc-500 mt-3 mb-10">
+      {author && <span>{author}</span>}
+      {date && <span>{formatDate(date)}</span>}
+      {updated && (
+        <span className="text-gray-400 dark:text-zinc-600">
+          Updated {formatDate(updated)}
+        </span>
+      )}
+    </div>
+  );
+}
+
 const components = {
+  PostMeta,
   h1: (props: HeadingProps) => (
-    <h1 className="font-medium text-2xl pt-12 mb-0" {...props} />
+    <h1
+      className="font-semibold text-3xl tracking-tight pt-8 mb-0 text-gray-950 dark:text-zinc-50"
+      {...props}
+    />
   ),
   h2: (props: HeadingProps) => (
     <h2
