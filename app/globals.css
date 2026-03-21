@@ -20,11 +20,26 @@ pre {
   padding: 1rem 1.25rem;
   font-size: 0.875rem;
   line-height: 1.7;
-  background-color: #1a1a2e !important;
+  background-color: #0d1117 !important;
+  color: #e6edf3;
+
+  --sh-class: #f0883e;
+  --sh-identifier: #e6edf3;
+  --sh-sign: #7ee787;
+  --sh-property: #79c0ff;
+  --sh-entity: #d2a8ff;
+  --sh-jsxliterals: #a5d6ff;
+  --sh-string: #a5d6ff;
+  --sh-keyword: #ff7b72;
+  --sh-comment: #8b949e;
 }
 
 pre code {
   font-family: var(--font-mono);
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: inherit;
 }
 
 code {

@@ -80,9 +80,16 @@ const components = {
       </a>
     );
   },
-  code: ({ children, ...props }: ComponentPropsWithoutRef<'code'>) => {
-    const codeHTML = highlight(children as string);
-    return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />;
+  pre: ({ children, ...props }: ComponentPropsWithoutRef<'pre'>) => {
+    return <pre {...props}>{children}</pre>;
+  },
+  code: ({ children, className, ...props }: ComponentPropsWithoutRef<'code'>) => {
+    const isBlock = typeof className === 'string' && className.startsWith('language-');
+    if (isBlock || (typeof children === 'string' && children.includes('\n'))) {
+      const codeHTML = highlight(children as string);
+      return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />;
+    }
+    return <code {...props}>{children}</code>;
   },
   blockquote: (props: BlockquoteProps) => (
     <blockquote
