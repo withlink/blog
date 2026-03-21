@@ -9,7 +9,7 @@ export interface Author {
 export const authors: Record<string, Author> = {
   arman: {
     name: 'Arman Khan',
-    bio: 'Co-founder & CTO at Somethings. Building a mentorship platform connecting teens with mentors.',
+    bio: 'Founding Principal Engineer at Somethings. Building a mentorship platform connecting teens with mentors.',
     twitter: 'codingwitharman',
     github: 'iarmankhan',
   },
