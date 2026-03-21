@@ -2,6 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
+import { ThemeProvider } from './theme-provider';
+import { ThemeToggle } from './theme-toggle';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono' });
@@ -22,22 +24,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${geist.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="antialiased tracking-tight">
-        <div className="min-h-screen flex flex-col justify-between pt-0 md:pt-8 p-8 dark:bg-zinc-950 bg-white text-gray-900 dark:text-zinc-200">
-          <main className="max-w-[65ch] mx-auto w-full space-y-6">
-            <header className="mb-8">
-              <Link
-                href="/"
-                className="text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
-              >
-                Somethings Engineering
-              </Link>
-            </header>
-            {children}
-          </main>
-          <Footer />
-        </div>
+        <ThemeProvider>
+          <div className="min-h-screen flex flex-col justify-between pt-6 md:pt-16 px-6 md:px-8 pb-8 dark:bg-zinc-950 bg-white text-gray-900 dark:text-zinc-200">
+            <main className="max-w-[65ch] mx-auto w-full">
+              <header className="flex items-center justify-between mb-12">
+                <Link
+                  href="/"
+                  className="text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                >
+                  Somethings Engineering
+                </Link>
+                <ThemeToggle />
+              </header>
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
@@ -45,7 +54,7 @@ export default function RootLayout({
 
 function Footer() {
   return (
-    <footer className="mt-16 max-w-[65ch] mx-auto w-full py-8">
+    <footer className="mt-20 max-w-[65ch] mx-auto w-full py-8 border-t border-gray-100 dark:border-zinc-800">
       <div className="flex gap-4 text-sm tracking-tight text-gray-400 dark:text-zinc-500">
         <a
           href="https://somethings.com"

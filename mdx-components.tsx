@@ -50,36 +50,38 @@ const components = {
   ),
   h2: (props: HeadingProps) => (
     <h2
-      className="text-gray-800 dark:text-zinc-200 font-medium text-lg mt-8 mb-3"
+      className="text-gray-800 dark:text-zinc-200 font-medium text-xl mt-12 mb-4"
       {...props}
     />
   ),
   h3: (props: HeadingProps) => (
     <h3
-      className="text-gray-800 dark:text-zinc-200 font-medium mt-8 mb-3"
+      className="text-gray-800 dark:text-zinc-200 font-medium text-base mt-10 mb-3"
       {...props}
     />
   ),
   h4: (props: HeadingProps) => <h4 className="font-medium" {...props} />,
   p: (props: ParagraphProps) => (
     <p
-      className="text-gray-800 dark:text-zinc-300 leading-relaxed"
+      className="text-gray-800 dark:text-zinc-300 leading-7 my-5"
       {...props}
     />
   ),
   ol: (props: ListProps) => (
     <ol
-      className="text-gray-800 dark:text-zinc-300 list-decimal pl-5 space-y-2"
+      className="text-gray-800 dark:text-zinc-300 list-decimal pl-5 space-y-2 my-5"
       {...props}
     />
   ),
   ul: (props: ListProps) => (
     <ul
-      className="text-gray-800 dark:text-zinc-300 list-disc pl-5 space-y-1"
+      className="text-gray-800 dark:text-zinc-300 list-disc pl-5 space-y-2 my-5"
       {...props}
     />
   ),
-  li: (props: ListItemProps) => <li className="pl-1" {...props} />,
+  li: (props: ListItemProps) => (
+    <li className="pl-1 leading-7" {...props} />
+  ),
   em: (props: ComponentPropsWithoutRef<'em'>) => (
     <em className="font-medium" {...props} />
   ),
