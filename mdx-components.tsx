@@ -1,6 +1,7 @@
 import React, { ComponentPropsWithoutRef } from 'react';
 import Link from 'next/link';
 import { highlight } from 'sugar-high';
+import { authors } from './app/blog/authors';
 
 type HeadingProps = ComponentPropsWithoutRef<'h1'>;
 type ParagraphProps = ComponentPropsWithoutRef<'p'>;
@@ -40,8 +41,63 @@ function PostMeta({
   );
 }
 
+function AuthorCard({ id }: { id: string }) {
+  const author = authors[id];
+  if (!author) return null;
+
+  const links = [
+    author.twitter && {
+      label: `@${author.twitter}`,
+      href: `https://x.com/${author.twitter}`,
+    },
+    author.github && {
+      label: 'GitHub',
+      href: `https://github.com/${author.github}`,
+    },
+    author.website && {
+      label: 'Website',
+      href: author.website,
+    },
+  ].filter(Boolean) as { label: string; href: string }[];
+
+  return (
+    <div className="mt-16 pt-8 border-t border-gray-200 dark:border-zinc-800">
+      <div className="flex gap-4 items-start">
+        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 font-medium text-lg shrink-0">
+          {author.name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')}
+        </div>
+        <div>
+          <p className="font-medium text-gray-900 dark:text-zinc-100 !my-0">
+            {author.name}
+          </p>
+          <p className="text-sm text-gray-600 dark:text-zinc-400 !my-1">
+            {author.bio}
+          </p>
+          <div className="flex gap-3 mt-2">
+            {links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-500 dark:text-zinc-500 hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const components = {
   PostMeta,
+  AuthorCard,
   h1: (props: HeadingProps) => (
     <h1
       className="font-semibold text-3xl tracking-tight pt-8 mb-0 text-gray-950 dark:text-zinc-50"
