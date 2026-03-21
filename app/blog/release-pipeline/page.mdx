@@ -1,0 +1,155 @@
+export const metadata = {
+  title: 'How We Ship Mobile Updates in Minutes, Not Weeks',
+  description: 'Our fully automated release pipeline for React Native — branch names trigger native builds, OTA updates, and app store submissions. No manual steps beyond merging a PR.',
+  date: '2026-03-21',
+  author: 'Arman Khan',
+  alternates: {
+    canonical: '/blog/release-pipeline',
+  },
+};
+
+# How We Ship Mobile Updates in Minutes, Not Weeks
+
+Mobile app releases are slow by default. You write a fix, open a PR, merge it, remember to kick off a build, wait 30 minutes, upload the binary, fill out release notes, submit for review, wait 24 hours, then pray nothing goes wrong. Multiply that by two platforms.
+
+At Somethings, we ship a React Native app used by thousands of teens and mentors. Bugs that took 10 minutes to fix took 3 days to reach users. Native builds required someone to remember a sequence of manual steps -- and that someone was usually me.
+
+So we built a pipeline where the only manual step is merging a pull request. Native builds get triggered, submitted to both app stores, and tagged automatically. OTA updates reach users within minutes. All from the branch name.
+
+---
+
+## Branch names as deployment triggers
+
+Every change falls into one of two categories: native changes (new modules, permissions, SDK upgrades) requiring a full build, or JavaScript-only (bug fixes, UI changes, new screens) delivered via Expo OTA. The branching strategy encodes this:
+
+| Branch pattern | What happens on merge |
+|---|---|
+| `release/*` | Native build + app store submission |
+| `feat/*`, `bugfix/*`, `chore/*` | OTA update |
+| `hotfix/*` | OTA update, marked urgent |
+
+Merge to `staging` → goes to TestFlight / Internal Track. Merge to `main` → goes to production.
+
+No deployment buttons. No Slack commands. The branch name is the intent.
+
+## Native builds: merge a PR, ship to stores
+
+This is the part we're most proud of. When a `release/*` branch merges to `staging` or `main`, a workflow extracts the version from the branch name (`release/3.6.0` → `3.6.0`), syncs it with EAS, triggers builds for iOS and Android with `--auto-submit`, and creates a git tag.
+
+```yaml
+- name: Trigger production EAS builds
+  if: github.base_ref == 'main'
+  run: |
+    eas build --profile production --platform ios \
+      --non-interactive --no-wait --auto-submit
+    eas build --profile production --platform android \
+      --non-interactive --no-wait --auto-submit
+```
+
+`--no-wait` so the Action doesn't block for 15-30 minutes. `--auto-submit` so the binary goes straight to the store. The only remaining manual step is pressing "Submit for Review" in App Store Connect.
+
+Before this, the build would finish on EAS and someone had to remember to download and upload it. That gap caused multi-day delays more than once. `--auto-submit` closed it.
+
+A shell script standardizes release branch creation:
+
+```bash
+./scripts/release-workflow.sh 3.6.0
+```
+
+Checks out `main`, creates `release/3.6.0`, bumps the version, commits. Feature branches can merge _into_ the release branch without triggering deployment -- workflows only fire when the release branch merges into `staging` or `main`.
+
+### EAS to Slack
+
+Native builds are async and take 15-30 minutes. Without visibility, someone has to check the Expo dashboard or App Store Connect to see if things worked.
+
+We built a small webhook service -- a single TypeScript file on Vercel -- that receives EAS build and submit events and posts Slack notifications with direct links:
+
+```typescript
+app.post("/webhooks/build", async (c) => {
+  const body = await c.req.text();
+  const signature = c.req.header("expo-signature");
+  if (!verifySignature(body, signature, secret))
+    return c.json({ error: "Invalid signature" }, 401);
+
+  const payload: BuildPayload = JSON.parse(body);
+  await sendToSlack(slackUrl, formatBuildMessage(payload));
+  return c.json({ ok: true });
+});
+```
+
+Setup is two `eas webhook:create` commands pointed at the Vercel function. When someone merges a `release/*` branch, the team sees Slack messages as each build finishes and each binary gets submitted. Nobody opens the Expo dashboard. Nobody checks App Store Connect wondering "did the upload go through?"
+
+## OTA updates: merge and forget
+
+When a `feat/*`, `bugfix/*`, or `chore/*` branch merges into `staging` or `main`, a GitHub Actions workflow reads the current version from EAS, increments the patch (`3.5.4` → `3.5.5`), publishes the OTA bundle, and notifies the backend. The app shows a toast with a "Restart" button when the update is ready.
+
+The version lives as an EAS environment variable (`EXPO_PUBLIC_APP_VERSION`) -- not in `package.json`. This is the single source of truth. CI reads and increments it atomically. No merge conflicts on version bumps.
+
+The core script:
+
+```bash
+# Get current version from EAS
+CURRENT_APP_VERSION=$(eas env:get \
+  --variable-name EXPO_PUBLIC_APP_VERSION \
+  --variable-environment "$ENV" \
+  --non-interactive 2>/dev/null | cut -d'=' -f2 | tr -d '\n')
+
+# Increment patch
+IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_APP_VERSION"
+NEW_PATCH=$((PATCH + 1))
+NEW_APP_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+
+# Update version in EAS and publish
+eas env:update --variable-name EXPO_PUBLIC_APP_VERSION \
+  --variable-environment "$ENV" --value "$NEW_APP_VERSION" --non-interactive
+eas update --environment "$ENV" --channel "$CHANNEL" \
+  --message "$MESSAGE" --clear-cache --non-interactive
+```
+
+The workflow only fires for the right branch prefixes:
+
+```yaml
+if: >
+  github.event.pull_request.merged == true && (
+    startsWith(github.head_ref, 'feat/') ||
+    startsWith(github.head_ref, 'bugfix/') ||
+    startsWith(github.head_ref, 'chore/') ||
+    startsWith(github.head_ref, 'hotfix/')
+  )
+```
+
+This means `release/*` branches merging to the same target don't accidentally trigger an OTA. If the source branch is `hotfix/*`, the workflow automatically marks the update as urgent when notifying the backend.
+
+When multiple developers merge to `staging` within an hour, multiple OTAs publish sequentially. Each contains the full bundle, so users only download the latest one.
+
+## Version lifecycle
+
+```
+Native Build → sets 3.6.0
+  OTA #1 → auto-increments to 3.6.1
+  OTA #2 → auto-increments to 3.6.2
+Native Build → sets 3.7.0 (patch resets)
+  OTA #1 → auto-increments to 3.7.1
+```
+
+Major and minor versions are human decisions. Patch versions are fully automated.
+
+## What we learned
+
+Branch naming won over GitHub labels, manual triggers, and deploy bots because it requires zero tooling. Every developer already creates branches. The prefix already communicates intent.
+
+We used to store the version in `package.json`. Constant merge conflicts when multiple OTAs were in flight. Moving to EAS eliminated that overnight.
+
+We also documented what to do if a staging build accidentally ships to production (temporarily swap EAS env vars, push an emergency OTA). Haven't needed the full procedure. Parts of it have been useful in less dramatic situations.
+
+## What's next
+
+CI runs type checking, linting, and format checks on every PR -- but it doesn't verify the app actually works. A screen could crash on mount and still pass.
+
+We're adding Maestro E2E tests that run before anything ships. Login, chat, session booking -- verified on a simulator before any update reaches users. If the tests fail, the deployment doesn't go out.
+
+Right now we merge and trust. Soon we'll merge and verify. That's the last piece.
+
+---
+
+*We're building [Somethings](https://somethings.com), a mentorship platform connecting teens with mentors. If you've set up something similar or found a better way to handle any of this, I'd like to hear about it -- arman@somethings.com.*

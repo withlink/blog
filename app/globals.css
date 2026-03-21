@@ -1,0 +1,90 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+
+::selection {
+  background-color: #47a3f3;
+  color: #fefefe;
+}
+
+html {
+  min-width: 360px;
+}
+
+pre {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  background-color: #1a1a2e !important;
+}
+
+pre code {
+  font-family: var(--font-mono);
+}
+
+code {
+  font-family: var(--font-mono);
+}
+
+p code,
+li code,
+td code {
+  font-size: 0.875rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  background-color: #f3f4f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  p code,
+  li code,
+  td code {
+    background-color: #27272a;
+  }
+}
+
+article hr {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  border-color: #e5e7eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  article hr {
+    border-color: #3f3f46;
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+th {
+  text-align: left;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  th {
+    border-bottom-color: #3f3f46;
+  }
+  td {
+    border-bottom-color: #27272a;
+  }
+}
