@@ -81,7 +81,7 @@ function AuthorCard({ id }: { id: string }) {
           <p className="font-medium text-gray-900 dark:text-zinc-100 !my-0">
             {author.name}
           </p>
-          <p className="text-sm text-gray-600 dark:text-zinc-400 !my-1">
+          <p className="text-sm text-gray-600 dark:text-zinc-400 !my-1 text-pretty">
             {author.bio}
           </p>
           <div className="flex gap-3 mt-2">
