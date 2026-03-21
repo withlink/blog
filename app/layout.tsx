@@ -36,8 +36,13 @@ export default function RootLayout({
               <header className="flex items-center justify-between mb-12">
                 <Link
                   href="/"
-                  className="text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                  className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
                 >
+                  <img
+                    src="/logo.png"
+                    alt="Somethings"
+                    className="w-6 h-6 rounded"
+                  />
                   Somethings Engineering
                 </Link>
                 <ThemeToggle />

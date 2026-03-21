@@ -16,6 +16,14 @@ html {
   min-width: 360px;
 }
 
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
 pre {
   overflow-x: auto;
   border-radius: 0.5rem;

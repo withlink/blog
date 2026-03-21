@@ -1,14 +1,14 @@
-import React, { ComponentPropsWithoutRef } from 'react';
-import Link from 'next/link';
-import { highlight } from 'sugar-high';
-import { authors } from './app/blog/authors';
+import React, { ComponentPropsWithoutRef } from "react";
+import Link from "next/link";
+import { highlight } from "sugar-high";
+import { authors } from "./app/blog/authors";
 
-type HeadingProps = ComponentPropsWithoutRef<'h1'>;
-type ParagraphProps = ComponentPropsWithoutRef<'p'>;
-type ListProps = ComponentPropsWithoutRef<'ul'>;
-type ListItemProps = ComponentPropsWithoutRef<'li'>;
-type AnchorProps = ComponentPropsWithoutRef<'a'>;
-type BlockquoteProps = ComponentPropsWithoutRef<'blockquote'>;
+type HeadingProps = ComponentPropsWithoutRef<"h1">;
+type ParagraphProps = ComponentPropsWithoutRef<"p">;
+type ListProps = ComponentPropsWithoutRef<"ul">;
+type ListItemProps = ComponentPropsWithoutRef<"li">;
+type AnchorProps = ComponentPropsWithoutRef<"a">;
+type BlockquoteProps = ComponentPropsWithoutRef<"blockquote">;
 
 function PostMeta({
   author,
@@ -20,11 +20,11 @@ function PostMeta({
   updated?: string;
 }) {
   const formatDate = (d: string) => {
-    const dt = new Date(d + 'T00:00:00');
-    return dt.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const dt = new Date(d + "T00:00:00");
+    return dt.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -51,11 +51,11 @@ function AuthorCard({ id }: { id: string }) {
       href: `https://x.com/${author.twitter}`,
     },
     author.github && {
-      label: 'GitHub',
+      label: "GitHub",
       href: `https://github.com/${author.github}`,
     },
     author.website && {
-      label: 'Website',
+      label: "Website",
       href: author.website,
     },
   ].filter(Boolean) as { label: string; href: string }[];
@@ -72,9 +72,9 @@ function AuthorCard({ id }: { id: string }) {
         ) : (
           <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 font-medium text-lg shrink-0">
             {author.name
-              .split(' ')
+              .split(" ")
               .map((n) => n[0])
-              .join('')}
+              .join("")}
           </div>
         )}
         <div>
@@ -108,30 +108,28 @@ const components = {
   AuthorCard,
   h1: (props: HeadingProps) => (
     <h1
-      className="font-semibold text-3xl tracking-tight pt-8 mb-0 text-gray-950 dark:text-zinc-50"
-      style={{ textWrap: 'balance' }}
+      className="font-semibold text-3xl tracking-tight pt-8 mb-0 text-gray-950 dark:text-zinc-50 text-balance"
       {...props}
     />
   ),
   h2: (props: HeadingProps) => (
     <h2
-      className="text-gray-800 dark:text-zinc-200 font-medium text-xl mt-12 mb-4"
-      style={{ textWrap: 'balance' }}
+      className="text-gray-800 dark:text-zinc-200 font-medium text-xl mt-12 mb-4 text-balance"
       {...props}
     />
   ),
   h3: (props: HeadingProps) => (
     <h3
-      className="text-gray-800 dark:text-zinc-200 font-medium text-base mt-10 mb-3"
-      style={{ textWrap: 'balance' }}
+      className="text-gray-800 dark:text-zinc-200 font-medium text-base mt-10 mb-3 text-balance"
       {...props}
     />
   ),
-  h4: (props: HeadingProps) => <h4 className="font-medium" style={{ textWrap: 'balance' }} {...props} />,
+  h4: (props: HeadingProps) => (
+    <h4 className="font-medium text-balance" {...props} />
+  ),
   p: (props: ParagraphProps) => (
     <p
-      className="text-gray-800 dark:text-zinc-300 leading-7 my-5"
-      style={{ textWrap: 'pretty' }}
+      className="text-gray-800 dark:text-zinc-300 leading-7 my-5 text-pretty"
       {...props}
     />
   ),
@@ -147,26 +145,24 @@ const components = {
       {...props}
     />
   ),
-  li: (props: ListItemProps) => (
-    <li className="pl-1 leading-7" {...props} />
-  ),
-  em: (props: ComponentPropsWithoutRef<'em'>) => (
+  li: (props: ListItemProps) => <li className="pl-1 leading-7" {...props} />,
+  em: (props: ComponentPropsWithoutRef<"em">) => (
     <em className="font-medium" {...props} />
   ),
-  strong: (props: ComponentPropsWithoutRef<'strong'>) => (
+  strong: (props: ComponentPropsWithoutRef<"strong">) => (
     <strong className="font-medium" {...props} />
   ),
   a: ({ href, children, ...props }: AnchorProps) => {
     const className =
-      'text-blue-500 hover:text-blue-700 dark:text-gray-400 hover:dark:text-gray-300 dark:underline dark:underline-offset-2 dark:decoration-gray-700';
-    if (href?.startsWith('/')) {
+      "text-blue-500 hover:text-blue-700 dark:text-gray-400 hover:dark:text-gray-300 dark:underline dark:underline-offset-2 dark:decoration-gray-700";
+    if (href?.startsWith("/")) {
       return (
         <Link href={href} className={className} {...props}>
           {children}
         </Link>
       );
     }
-    if (href?.startsWith('#')) {
+    if (href?.startsWith("#")) {
       return (
         <a href={href} className={className} {...props}>
           {children}
@@ -185,12 +181,17 @@ const components = {
       </a>
     );
   },
-  pre: ({ children, ...props }: ComponentPropsWithoutRef<'pre'>) => {
+  pre: ({ children, ...props }: ComponentPropsWithoutRef<"pre">) => {
     return <pre {...props}>{children}</pre>;
   },
-  code: ({ children, className, ...props }: ComponentPropsWithoutRef<'code'>) => {
-    const isBlock = typeof className === 'string' && className.startsWith('language-');
-    if (isBlock || (typeof children === 'string' && children.includes('\n'))) {
+  code: ({
+    children,
+    className,
+    ...props
+  }: ComponentPropsWithoutRef<"code">) => {
+    const isBlock =
+      typeof className === "string" && className.startsWith("language-");
+    if (isBlock || (typeof children === "string" && children.includes("\n"))) {
       const codeHTML = highlight(children as string);
       return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />;
     }
