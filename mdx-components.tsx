@@ -63,12 +63,20 @@ function AuthorCard({ id }: { id: string }) {
   return (
     <div className="mt-16 pt-8 border-t border-gray-200 dark:border-zinc-800">
       <div className="flex gap-4 items-start">
-        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 font-medium text-lg shrink-0">
-          {author.name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')}
-        </div>
+        {author.avatar ? (
+          <img
+            src={author.avatar}
+            alt={author.name}
+            className="w-12 h-12 rounded-full shrink-0"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 font-medium text-lg shrink-0">
+            {author.name
+              .split(' ')
+              .map((n) => n[0])
+              .join('')}
+          </div>
+        )}
         <div>
           <p className="font-medium text-gray-900 dark:text-zinc-100 !my-0">
             {author.name}
@@ -101,25 +109,29 @@ const components = {
   h1: (props: HeadingProps) => (
     <h1
       className="font-semibold text-3xl tracking-tight pt-8 mb-0 text-gray-950 dark:text-zinc-50"
+      style={{ textWrap: 'balance' }}
       {...props}
     />
   ),
   h2: (props: HeadingProps) => (
     <h2
       className="text-gray-800 dark:text-zinc-200 font-medium text-xl mt-12 mb-4"
+      style={{ textWrap: 'balance' }}
       {...props}
     />
   ),
   h3: (props: HeadingProps) => (
     <h3
       className="text-gray-800 dark:text-zinc-200 font-medium text-base mt-10 mb-3"
+      style={{ textWrap: 'balance' }}
       {...props}
     />
   ),
-  h4: (props: HeadingProps) => <h4 className="font-medium" {...props} />,
+  h4: (props: HeadingProps) => <h4 className="font-medium" style={{ textWrap: 'balance' }} {...props} />,
   p: (props: ParagraphProps) => (
     <p
       className="text-gray-800 dark:text-zinc-300 leading-7 my-5"
+      style={{ textWrap: 'pretty' }}
       {...props}
     />
   ),
