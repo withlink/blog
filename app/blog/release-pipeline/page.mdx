@@ -8,7 +8,7 @@ export const metadata = {
   },
 };
 
-# How We Ship Mobile Updates in Minutes, Not Weeks
+# How we ship mobile updates in minutes, not weeks
 
 <PostMeta author="Arman Khan" date="2026-03-21" />
 
@@ -16,13 +16,11 @@ Mobile app releases are slow by default. You write a fix, open a PR, merge it, r
 
 At Somethings, we ship a React Native app used by thousands of teens and mentors. Bugs that took 10 minutes to fix took 3 days to reach users. Native builds required someone to remember a sequence of manual steps -- and that someone was usually me.
 
-So we built a pipeline where the only manual step is merging a pull request. Native builds get triggered, submitted to both app stores, and tagged automatically. OTA updates reach users within minutes. All from the branch name.
+So we built a pipeline where the only manual step is merging a pull request. Native builds get triggered, submitted to both app stores, and tagged automatically. OTA (over-the-air) updates — JavaScript-only changes pushed directly to users without an app store review — reach users within minutes. All from the branch name.
 
----
+## The branch name is the deploy intent
 
-## Branch names as deployment triggers
-
-Every change falls into one of two categories: native changes (new modules, permissions, SDK upgrades) requiring a full build, or JavaScript-only (bug fixes, UI changes, new screens) delivered via Expo OTA. The branching strategy encodes this:
+Every change falls into one of two categories: native changes (new modules, permissions, SDK upgrades) that require a full build, or JavaScript-only changes (bug fixes, UI tweaks, new screens) that ship via OTA. The branch name encodes which one it is:
 
 | Branch pattern | What happens on merge |
 |---|---|
@@ -34,7 +32,9 @@ Merge to `staging` → goes to TestFlight / Internal Track. Merge to `main` → 
 
 No deployment buttons. No Slack commands. The branch name is the intent.
 
-## Native builds: merge a PR, ship to stores
+We considered GitHub labels, manual triggers, and deploy bots before landing here. Branch naming won because it requires zero extra tooling. Every developer already creates branches. The prefix already communicates intent. There's nothing new to learn.
+
+## How native builds go straight to the app stores
 
 This is the part we're most proud of. When a `release/*` branch merges to `staging` or `main`, a workflow extracts the version from the branch name (`release/3.6.0` → `3.6.0`), syncs it with EAS, triggers builds for iOS and Android with `--auto-submit`, and creates a git tag.
 
@@ -52,7 +52,7 @@ This is the part we're most proud of. When a `release/*` branch merges to `stagi
 
 Before this, the build would finish on EAS and someone had to remember to download and upload it. That gap caused multi-day delays more than once. `--auto-submit` closed it.
 
-A shell script standardizes release branch creation:
+A shell script handles the release branch setup:
 
 ```bash
 ./scripts/release-workflow.sh 3.6.0
@@ -60,9 +60,9 @@ A shell script standardizes release branch creation:
 
 Checks out `main`, creates `release/3.6.0`, bumps the version, commits. Feature branches can merge _into_ the release branch without triggering deployment -- workflows only fire when the release branch merges into `staging` or `main`.
 
-### EAS to Slack
+## Nobody checks the Expo dashboard anymore
 
-Native builds are async and take 15-30 minutes. Without visibility, someone has to check the Expo dashboard or App Store Connect to see if things worked.
+Native builds take 15-30 minutes. Without notifications, someone has to keep checking the Expo dashboard or App Store Connect to see if things worked. That got old fast.
 
 We built a small webhook service -- a single TypeScript file on Vercel -- that receives EAS build and submit events and posts Slack notifications with direct links:
 
@@ -81,27 +81,29 @@ app.post("/webhooks/build", async (c) => {
 
 Setup is two `eas webhook:create` commands pointed at the Vercel function. When someone merges a `release/*` branch, the team sees Slack messages as each build finishes and each binary gets submitted. Nobody opens the Expo dashboard. Nobody checks App Store Connect wondering "did the upload go through?"
 
-## OTA updates: merge and forget
+This was maybe 2 hours of work and it removed an entire class of "did that actually ship?" conversations from our Slack.
 
-When a `feat/*`, `bugfix/*`, or `chore/*` branch merges into `staging` or `main`, a GitHub Actions workflow reads the current version from EAS, increments the patch (`3.5.4` → `3.5.5`), publishes the OTA bundle, and notifies the backend. The app shows a toast with a "Restart" button when the update is ready.
+## OTA updates land in minutes, not days
 
-The version lives as an EAS environment variable (`EXPO_PUBLIC_APP_VERSION`) -- not in `package.json`. This is the single source of truth. CI reads and increments it atomically. No merge conflicts on version bumps.
+When a `feat/*`, `bugfix/*`, or `chore/*` branch merges into `staging` or `main`, a GitHub Actions workflow kicks in. It reads the current version from EAS, bumps the patch (`3.5.4` → `3.5.5`), publishes the OTA bundle, and notifies the backend. The app shows a toast with a "Restart" button when the update lands.
+
+One thing we got wrong early: storing the version in `package.json`. Constant merge conflicts when multiple OTAs were in flight. Two developers merge to staging within an hour and suddenly you're resolving conflicts on a version string. We moved the version to an EAS environment variable (`EXPO_PUBLIC_APP_VERSION`) and that problem disappeared overnight. CI reads and increments it atomically. Single source of truth.
 
 The core script:
 
 ```bash
-# Get current version from EAS
+# Get current version from EAS.
 CURRENT_APP_VERSION=$(eas env:get \
   --variable-name EXPO_PUBLIC_APP_VERSION \
   --variable-environment "$ENV" \
   --non-interactive 2>/dev/null | cut -d'=' -f2 | tr -d '\n')
 
-# Increment patch
+# Increment patch.
 IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_APP_VERSION"
 NEW_PATCH=$((PATCH + 1))
 NEW_APP_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
 
-# Update version in EAS and publish
+# Update version in EAS and publish.
 eas env:update --variable-name EXPO_PUBLIC_APP_VERSION \
   --variable-environment "$ENV" --value "$NEW_APP_VERSION" --non-interactive
 eas update --environment "$ENV" --channel "$CHANNEL" \
@@ -122,9 +124,9 @@ if: >
 
 This means `release/*` branches merging to the same target don't accidentally trigger an OTA. If the source branch is `hotfix/*`, the workflow automatically marks the update as urgent when notifying the backend.
 
-When multiple developers merge to `staging` within an hour, multiple OTAs publish sequentially. Each contains the full bundle, so users only download the latest one.
+When multiple developers merge to `staging` within an hour, OTAs publish one after another. Each contains the full bundle, so users only download the latest one.
 
-## Version lifecycle
+The version lifecycle ends up looking like this:
 
 ```
 Native Build → sets 3.6.0
@@ -136,20 +138,12 @@ Native Build → sets 3.7.0 (patch resets)
 
 Major and minor versions are human decisions. Patch versions are fully automated.
 
-## What we learned
+## The gap that's still open
 
-Branch naming won over GitHub labels, manual triggers, and deploy bots because it requires zero tooling. Every developer already creates branches. The prefix already communicates intent.
+We also documented what to do if a staging build accidentally ships to production (temporarily swap EAS env vars, push an emergency OTA). Haven't needed the full procedure yet. Parts of it have been useful in less dramatic situations.
 
-We used to store the version in `package.json`. Constant merge conflicts when multiple OTAs were in flight. Moving to EAS eliminated that overnight.
+But the real gap is testing. CI runs type checking, linting, and format checks on every PR -- but it doesn't verify the app actually works. A screen could crash on mount and still pass all checks.
 
-We also documented what to do if a staging build accidentally ships to production (temporarily swap EAS env vars, push an emergency OTA). Haven't needed the full procedure. Parts of it have been useful in less dramatic situations.
-
-## What's next
-
-CI runs type checking, linting, and format checks on every PR -- but it doesn't verify the app actually works. A screen could crash on mount and still pass.
-
-We're adding Maestro E2E tests that run before anything ships. Login, chat, session booking -- verified on a simulator before any update reaches users. If the tests fail, the deployment doesn't go out.
-
-Right now we merge and trust. Soon we'll merge and verify. That's the last piece.
+We're adding Maestro E2E tests that run before anything ships. Login, chat, session booking -- verified on a simulator before any update reaches users. If the tests fail, the deployment doesn't go out. Right now we merge and trust. Soon we'll merge and verify.
 
 <AuthorCard id="arman" />
