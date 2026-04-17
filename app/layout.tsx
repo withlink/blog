@@ -16,6 +16,29 @@ export const metadata: Metadata = {
   },
   description:
     'Engineering blog from the team building Somethings — a mentorship platform connecting teens with mentors.',
+  openGraph: {
+    title: 'Somethings Engineering',
+    description:
+      'Engineering blog from the team building Somethings — a mentorship platform connecting teens with mentors.',
+    url: 'https://blog.somethings.com',
+    siteName: 'Somethings Engineering',
+    images: [
+      {
+        url: 'https://blog.somethings.com/og.gif',
+        width: 1200,
+        height: 630,
+        alt: 'Somethings Engineering',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Somethings Engineering',
+    description:
+      'Engineering blog from the team building Somethings — a mentorship platform connecting teens with mentors.',
+    images: ['https://blog.somethings.com/og.gif'],
+  },
 };
 
 export default function RootLayout({
