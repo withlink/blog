@@ -2,6 +2,7 @@ import React, { ComponentPropsWithoutRef } from "react";
 import Link from "next/link";
 import { highlight } from "sugar-high";
 import { authors } from "./app/blog/authors";
+import { Mermaid } from "./app/blog/mermaid";
 
 type HeadingProps = ComponentPropsWithoutRef<"h1">;
 type ParagraphProps = ComponentPropsWithoutRef<"p">;
@@ -106,6 +107,7 @@ function AuthorCard({ id }: { id: string }) {
 const components = {
   PostMeta,
   AuthorCard,
+  Mermaid,
   h1: (props: HeadingProps) => (
     <h1
       className="font-semibold text-3xl tracking-tight pt-8 mb-0 text-gray-950 dark:text-zinc-50 text-balance"

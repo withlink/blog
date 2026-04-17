@@ -15,4 +15,10 @@ export const authors: Record<string, Author> = {
     twitter: 'codingwitharman',
     github: 'iarmankhan',
   },
+  nick: {
+    name: 'Nick Gattuso',
+    bio: 'Engineer at Somethings.',
+    avatar: 'https://github.com/nickgattuso.png',
+    github: 'nickgattuso',
+  },
 };
