@@ -30,6 +30,21 @@ Every change falls into one of two categories: native changes (new modules, perm
 
 Merge to `staging` → goes to TestFlight / Internal Track. Merge to `main` → goes to production.
 
+<Mermaid chart={`
+flowchart TD
+  MergePR["Merge PR"] --> BranchCheck{"Branch prefix?"}
+  BranchCheck -->|"release/*"| NativePath["Native Build Path"]
+  BranchCheck -->|"feat/* bugfix/* chore/*"| OTAPath["OTA Update Path"]
+  BranchCheck -->|"hotfix/*"| UrgentOTA["OTA Update Path (urgent)"]
+  NativePath --> TargetNative{"Target branch?"}
+  OTAPath --> TargetOTA{"Target branch?"}
+  UrgentOTA --> TargetOTA
+  TargetNative -->|staging| TestFlight["TestFlight / Internal Track"]
+  TargetNative -->|main| AppStores["App Store + Google Play"]
+  TargetOTA -->|staging| StagingOTA["Staging OTA"]
+  TargetOTA -->|main| ProdOTA["Production OTA"]
+`} />
+
 No deployment buttons. No Slack commands. The branch name is the intent.
 
 We considered GitHub labels, manual triggers, and deploy bots before landing here. Branch naming won because it requires zero extra tooling. Every developer already creates branches. The prefix already communicates intent. There's nothing new to learn.
@@ -51,6 +66,18 @@ This is the part we're most proud of. When a `release/*` branch merges to `stagi
 `--no-wait` so the Action doesn't block for 15-30 minutes. `--auto-submit` so the binary goes straight to the store. The only remaining manual step is pressing "Submit for Review" in App Store Connect.
 
 Before this, the build would finish on EAS and someone had to remember to download and upload it. That gap caused multi-day delays more than once. `--auto-submit` closed it.
+
+<Mermaid chart={`
+flowchart LR
+  Script["release-workflow.sh 3.6.0"] --> Branch["Create release/3.6.0\nfrom main"]
+  Branch --> PR["Open PR to\nstaging or main"]
+  PR --> Merge["PR merged"]
+  Merge --> Extract["Extract version\nfrom branch name"]
+  Extract --> Sync["Sync EXPO_PUBLIC_APP_VERSION\nin EAS"]
+  Sync --> Build["eas build --auto-submit\niOS + Android"]
+  Build --> Tag["Create git tag\nv3.6.0"]
+  Tag --> Slack["Slack notification\nvia EAS webhook"]
+`} />
 
 A shell script handles the release branch setup:
 
@@ -86,6 +113,16 @@ This was maybe 2 hours of work and it removed an entire class of "did that actua
 ## OTA updates land in minutes, not days
 
 When a `feat/*`, `bugfix/*`, or `chore/*` branch merges into `staging` or `main`, a GitHub Actions workflow kicks in. It reads the current version from EAS, bumps the patch (`3.5.4` → `3.5.5`), publishes the OTA bundle, and notifies the backend. The app shows a toast with a "Restart" button when the update lands.
+
+<Mermaid chart={`
+flowchart LR
+  Merge["feat/* PR merged"] --> Workflow["GitHub Actions\nota-staging.yml"]
+  Workflow --> ReadVer["Read version\nfrom EAS"]
+  ReadVer --> Bump["Bump patch\n3.5.4 → 3.5.5"]
+  Bump --> Update["eas update\npublish JS bundle"]
+  Update --> Notify["PUT /v2/config/ota\nnotify backend"]
+  Notify --> Toast["App shows\nrestart toast"]
+`} />
 
 One thing we got wrong early: storing the version in `package.json`. Constant merge conflicts when multiple OTAs were in flight. Two developers merge to staging within an hour and suddenly you're resolving conflicts on a version string. We moved the version to an EAS environment variable (`EXPO_PUBLIC_APP_VERSION`) and that problem disappeared overnight. CI reads and increments it atomically. Single source of truth.
 
@@ -135,6 +172,15 @@ Native Build → sets 3.6.0
 Native Build → sets 3.7.0 (patch resets)
   OTA #1 → auto-increments to 3.7.1
 ```
+
+<Mermaid chart={`
+flowchart LR
+  NB1["Native Build\nsets 3.6.0"] --> OTA1["OTA #1\n3.6.1"]
+  OTA1 --> OTA2["OTA #2\n3.6.2"]
+  OTA2 --> NB2["Native Build\nsets 3.7.0"]
+  NB2 --> OTA3["OTA #1\n3.7.1"]
+  OTA3 --> OTA4["OTA #2\n3.7.2"]
+`} />
 
 Major and minor versions are human decisions. Patch versions are fully automated.
 
